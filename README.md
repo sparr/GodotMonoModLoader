@@ -1,68 +1,86 @@
 
-This is a Mod Loader for the game Atomcraft. 
+This is a Mod Loader for the game Atomcraft.
 
-# Warning
+# Quick Start
 
-**Currently, Atomcraft doesn't have official support for loading custom dlls into the game. 
-For this mod loader to work, the game needs to be patched first (and every time it updates). 
-A backup file is created to be able to restore the game if needed.**
-(The patched file is `data_Atomcraft_windows_x86_64/Atomcraft.dll`) 
+1. Extract everything from `GodotMonoModLoader.zip` into the game installation
+   folder, next to `AtomCraft.exe`.
+2. Install mod zips (don't extract them) into
+   `%AppData%/Godot/app_userdata/Atomcraft/Mods`.
+   Mods can also be installed in `Atomcraft/Mods/`.
+3. In Steam, right click the game in the Library, visit Propertes > General,
+   then enter `-s GodotMonoModLoader.gd` in the Launch Options field.
+4. Arrange for something to start the mod loader inside the game, from
+   [Launch Alternatives](#launch-alternatives) below.
+5. Launch the game, see the mod loader window, enjoy!
+
+# Launch Alternatives
+
+Everything in this section is optional and meant for unusual use cases.
+
+Each of these gets the mod loader running inside the game; they differ in what
+they touch and what they need from you. You can choose a different one for each
+game launch.
+
+<!-- Each way to start the mod loader documents itself here, as a "## "
+     subsection of this one, added by whichever branch introduces it. Keep to
+     this shape so the sections read as alternatives rather than steps:
+
+       ## <Name of the mechanism>
+       One sentence on what it does.
+       Pro:
+       Con:
+       Additional details
+
+     The rest of this file is shared, so add nothing outside this section. -->
+
+# Troubleshooting
+
+With the mod loader running, the game shows a Mod Loader report on startup, and
+the same messages go to `godot.log`. A `--headless` run has no window, so read
+the log there instead. Which symptom you get says where the problem is.
+
+**No report at all, and the game plays as normal.** The mod loader itself never
+ran, so `-s GodotMonoModLoader.gd` is missing from the launch options and was
+not provided by your chosen launch alternative. Try [Quick Start](#quick-start)
+again.
+
+**The report says the Mod Loader did not start, and there is no
+`GodotMonoModLoader.startup.log`.** Nothing got the C# half of the mod loader
+into the game. Re-check the requirements in
+[Launch Alternatives](#launch-alternatives).
+
+**The report says the Mod Loader did not start, and
+`GodotMonoModLoader.startup.log` exists.** Something started but did not finish.
+The log says how far it got.
+
+**The report lists your mods with errors.** The loader is working and the
+problem is in a mod. The report's own error text says which, and the log tab has
+the detail.
+
+If none of that fits, check that every file from `GodotMonoModLoader.zip` was
+extracted next to the game executable.
 
 ---
-
-# Installation instructions
-
-These are the steps to launch the game with mods:
-
-1. Download the GodotMonoModLoader.zip from Release ([Download](https://github.com/sacroimper/GodotMonoModLoader/raw/refs/heads/main/Release/GodotMonoModLoader.zip)).
-2. Extract all contents into the game installation folder (next to Atomcraft.exe).
-3. With the game closed, launch AtomcraftPatcher.exe (or AromcraftPatcher on Linux). It will confirm that the patch has been applied, and it can also be used to restore the original file.
-4. Install the mods as a Zip (don't extract) into `%AppData%/Godot/app_userdata/Atomcraft/Mods`, or the corresponding folder on Linux. (Alternatively, mods can also be installed in a Mods folder inside the game installation folder).
-5. Execute the game with the launch parameter `-s GodotMonoModLoader.gd`. This can be configured in Steam > Right-click the game in the library > Properties > General tab > Launch Options.
-
-Step 3 will need to be repeated each time the game updates.
-
-
-## Running the patcher from a script
-
-Step 3 can be automated. When stdin is not a terminal (a pipe, a file, or a CI log) the patcher skips the "Press ANY key" prompt and reports the outcome through its exit code:
-
-```sh
-AtomcraftPatcher /path/to/data_Atomcraft_windows_x86_64/Atomcraft.dll < /dev/null
-```
-
-| Option | Effect |
-| --- | --- |
-| `-y`, `--non-interactive` | Never wait for a keypress, even on a terminal. |
-| `--restore` | Restore the backup instead of patching. |
-| `--fail-if-patched` | Exit 6 instead of 0 when the target is already patched. |
-| `--quiet` | Suppress progress output. Errors still go to stderr. |
-| `-h`, `--help` | Show usage. |
-
-| Exit code | Meaning |
-| --- | --- |
-| 0 | Patch applied, or already patched |
-| 1 | Unclassified failure |
-| 2 | Usage error |
-| 3 | Atomcraft.dll or backup not found |
-| 4 | ModLoaderPatch.dll missing or unusable |
-| 5 | Old patch detected, restore required |
-| 6 | Already patched, with `--fail-if-patched` |
-
-A successful patch always exits 0, so `AtomcraftPatcher ... < /dev/null || exit 1` is enough to detect a failure. Use `--fail-if-patched` when a no-op needs to be distinguished from work actually done.
-
 
 # Mods
 
-Here is a list of the mods I've made: [AtomcraftMods](https://github.com/sacroimper/AtomcraftMods). I'm sure the community will share more through Atomcraft Official discord.
+Here is a list of the mods I've made:
+[AtomcraftMods](https://github.com/sacroimper/AtomcraftMods).
 
----
+The community shares mods in
+[#mods](https://discord.com/channels/264359192167448576/1467253955758260294) on
+the Atomcraft Official discord.
+
+Another contributor to this project publishes mods
+[on Github](https://github.com/sparr?tab=repositories&q=atomcraft-mod).
 
 # Modders
 
 To make a mod that loads with this Mod Loader:
 
-- It has to be packed as a zip and files have to be placed inside a folder named with the ModId.
+- It has to be packed as a zip and files have to be placed inside a folder named
+  with the ModId.
 - The zip must contain one file named mod.json with the following format:
 
 ```json
@@ -95,10 +113,17 @@ To make a mod that loads with this Mod Loader:
   ]
 }
 ```
-- For modules, only moduleId is mandatory. The other fields can be used only when needed.
-- If initClass is defined, once the library is loaded, a **public static** method named `Initiallize` will be called. 
-Additionally, **public static** methods `OnWorldLoad` and `OnWorldSave` will also be called before loading and saving a world. A Serializable object can be received/returned on these methods to save data into the world file (it will be stored in a file <saveDir>/modded/world.json).
-- The Harmony library is already loaded by default (version 2.4.2), don't include the dll on your mod.
+
+- For modules, only moduleId is mandatory. The other fields can be used only
+  when needed.
+- If initClass is defined, once the library is loaded, a **public static**
+  method named `Initialize` will be called.
+  Additionally, **public static** methods `OnWorldLoad` and `OnWorldSave` will
+  also be called before loading and saving a world. A Serializable object can be
+  received/returned on these methods to save data into the world file (it will
+  be stored in a file <saveDir>/modded/world.json).
+- The Harmony library is already loaded by default (version 2.4.2), don't
+  include the dll on your mod.
 - The JSON file for translations has the following format:
 
 ```json
@@ -114,4 +139,5 @@ Additionally, **public static** methods `OnWorldLoad` and `OnWorldSave` will als
 
 # Contact
 
-For any issue or comment about the mod loader, you can find me in the oficial Atomcraft Discord as @sacroimper.
+For any issue or comment about the mod loader, you can find me in the official
+Atomcraft Discord as @sacroimper.

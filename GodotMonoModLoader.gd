@@ -7,6 +7,23 @@ var log_history: Array[String] = []
 
 var start_time
 
+# Ways this build can be told to load mods, reported to the player when none of them
+# ran. Empty here on purpose: this script is shared by every loading mechanism and
+# names none of them.
+#
+# A branch that adds a mechanism appends one line, phrased as an instruction and in
+# plain text with no BBCode, since these lines are both printed to godot.log and
+# rendered in the report:
+#
+#     loading_methods.append("Start the game through SomeLauncher.exe instead of AtomCraft.exe")
+var loading_methods: Array[String] = []
+
+# Ways from that list which cannot work without a display, named when the loader fails
+# in a headless run. A headless game creates no DisplayServer, so anything that waits to
+# be called by the windowing or input code never starts at all, and the failure looks
+# identical to not having set anything up. Registered the same way as loading_methods.
+var headless_unsupported: Array[String] = []
+
 func _initialize():
 
 	start_time = Time.get_ticks_msec()
@@ -14,6 +31,12 @@ func _initialize():
 	load_game()
 	if load_mod_loader():
 		load_mods()
+
+	log_message("Loading report...")
+	var mod_loader_report = load("./GodotMonoModLoader/ModLoaderReport.tscn").instantiate()
+	mod_loader_report.loading_methods = loading_methods
+	mod_loader_report.initialize(mods, log_history, mod_loader != null)
+	self.root.add_child(mod_loader_report)
 
 	log_message("Exiting mod loader.")
 	log_separator()
@@ -71,44 +94,41 @@ func load_game() -> void:
 	log_message("Game loaded.")
 	log_separator()
 
-	log_message("Loading report...")
-	var mod_loader_report = load("./GodotMonoModLoader/ModLoaderReport.tscn").instantiate()
-	mod_loader_report.initialize(mods, log_history, mod_loader != null)
-	self.root.add_child(mod_loader_report)
-
+# 0Harmony.dll and GodotMonoModLoader.dll are already loaded by the time this runs.
+# Something got ModLoaderBootstrap running before the main scene existed, and it loaded
+# them into the game's own load context and registered their scripts. So all that is
+# left here is to pick up what they registered.
+#
+# A null script means that did not happen, which is a question of how the game was
+# started rather than anything this script can fix.
+#
+# The report names no mechanism of its own, listing whatever loading_methods holds, so
+# that this script stays shared by all of them. It points at ModLoader.md rather than
+# the README because that is the name the release zip installs it under, next to the
+# game executable.
+# Both failure modes mean the same thing, so they report the same way. An unregistered
+# res:// script path does not give back null here: load() returns an unusable
+# CSharpScript and it is new() that fails, so checking only for null would miss the
+# common case and report nothing useful.
 func load_mod_loader():
 
 	log_message("Initializing mod loader...")
-	
-	var Patch = load("res://GodotMonoModLoaderPatch/GodotMonoModLoaderPatch.cs")
-	if Patch == null:
-		log_message("The game needs to be patched to be able to load mods.")
-		return false
-
-	var patch = Patch.new()
-	if patch == null:
-		log_message("The game needs to be patched to be able to load mods.")
-		return false
-
-	var mod_loader_dir = OS.get_executable_path().get_base_dir().path_join("GodotMonoModLoader")
-
-	var error = patch.LoadDllFromPath(mod_loader_dir.path_join("0Harmony.dll"), null)
-	if error != 0:
-		log_message("Error initializing mod loader.")
-		return false
-
-	error = patch.LoadDllFromPath(mod_loader_dir.path_join("GodotMonoModLoader.dll"), "GodotMonoModLoader.GodotMonoModLoader")
-	if error != 0:
-		log_message("Error initializing mod loader.")
-		return false
 
 	var ModLoader = load("res://GodotMonoModLoader/GodotMonoModLoader.cs")
-	if patch == null:
-		log_message("Error initializing mod loader.")
-		return false
-	mod_loader = ModLoader.new()
+	if ModLoader != null:
+		mod_loader = ModLoader.new()
+
 	if mod_loader == null:
-		log_message("Error initializing mod loader.")
+		log_message("Mod loader did not load: the game was started without any of the ways to load it.")
+		if not loading_methods.is_empty():
+			log_message("Use whichever one you installed:")
+			for method in loading_methods:
+				log_message("  - " + method)
+		if not headless_unsupported.is_empty() and DisplayServer.get_name() == "headless":
+			log_message("This is a headless run, so these cannot work here: " + ", ".join(headless_unsupported))
+
+		log_message("ModLoader.md, next to the game executable, covers what each way needs, including any launch options it requires.")
+		log_message("GodotMonoModLoader.startup.log, also next to the game executable, records how far it got. It is missing entirely if nothing ran at all.")
 		return false
 
 	log_message("Mod loader initialized.")

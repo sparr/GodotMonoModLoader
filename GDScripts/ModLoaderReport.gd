@@ -8,6 +8,11 @@ var mods: Dictionary
 var history: Array[String]
 var mod_loader_initialized: bool
 
+# Set by the loader script before this node enters the tree. Each entry is one plain
+# text instruction for a way this build can be told to load mods; the list is empty
+# when nothing has contributed one. See loading_methods in GodotMonoModLoader.gd.
+var loading_methods: Array[String] = []
+
 @onready var summary := %Summary
 @onready var tabs := %Tabs
 @onready var errors := %ErrorsText
@@ -63,8 +68,17 @@ func _populate():
 	if !mod_loader_initialized:
 		tabs.current_tab = 0
 		tabs.set_tab_hidden(1, true)
-		errors.append_text("[color=red][font_size=30]Error initiating the Mod Loader.\nMake sure all files from GodotMonoModLoader.zip had been extracted and the game is patched.[/font_size][/color]\n")
-		errors.append_text("\n[color=yellow][font_size=30]Probably the game has been updated and needs to be patched again.[/font_size][/color]\n")
+		# Names no mechanism of its own: whatever loading_methods holds is listed, so
+		# this stays shared by all of them. Only the headline is enlarged, because a
+		# list at font_size 30 fills the pane and stops being readable as a list.
+		errors.append_text("[color=red][font_size=30]The Mod Loader did not start.[/font_size][/color]\n")
+		errors.append_text("\n[color=yellow]The game was launched without any of the ways to load mods.[/color]\n")
+		if not loading_methods.is_empty():
+			errors.append_text("\nUse whichever one you installed:\n\n")
+			for method in loading_methods:
+				errors.append_text("    " + method + "\n")
+		errors.append_text("\nAlso check that every file from GodotMonoModLoader.zip was extracted next to the game executable.\n")
+		errors.append_text("\n[b]ModLoader.md[/b], next to the game executable, covers what each way needs, including any launch options it requires.\n")
 		return
 
 	var mods_total := 0

@@ -16,10 +16,26 @@ public partial class GodotMonoModLoader : Node
 
 	public static readonly Dictionary<string, Type> EntryClasses = [];
 
+    /// <summary>
+    /// Entry point called by ModLoaderBootstrap, from inside the game's load context.
+    /// </summary>
+    /// <remarks>
+    /// Registering this assembly's own scripts is what lets GDScript reach C# with
+    /// <c>load("res://GodotMonoModLoader/GodotMonoModLoader.cs")</c>. The res:// path
+    /// is a key in Godot's script map rather than a real file; it comes from the
+    /// [ScriptPath] attribute `Godot.SourceGenerators` emits.
+    ///
+    /// Harmony is patched here, before `Game._Ready` runs, so hooks on the game's
+    /// startup path are in place in time to see it.
+    /// </remarks>
     public static void Initialize()
     {
+	    ScriptManagerBridge.LookupScriptsInAssembly(typeof(GodotMonoModLoader).Assembly);
+
 	    var harmony = new Harmony("GodotMonoModLoader");
 	    harmony.PatchAll();
+
+	    GD.Print("[GodotMonoModLoader] Mod loader initialized before Game._Ready.");
     }
 
     public int LoadMaterials(string zipPath, string path)
