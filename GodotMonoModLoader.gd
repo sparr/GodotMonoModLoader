@@ -23,6 +23,11 @@ var headless_unsupported: Array[String] = []
 
 func _initialize():
 
+	# This build ships a dinput8 stand-in that starts the loader; see ModLoader.md.
+	# Registered before anything else so it is listed even if loading fails immediately.
+	loading_methods.append("Put dinput8.dll next to the game executable")
+	headless_unsupported.append("dinput8.dll")
+
 	# This build can be patched into the game assembly; see ModLoader.md. Registered
 	# before anything else so it is listed even if loading fails immediately.
 	loading_methods.append("Run AtomcraftPatcher against Atomcraft.dll")

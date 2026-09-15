@@ -8,12 +8,11 @@ This is a Mod Loader for the game Atomcraft.
 2. Install mod zips (don't extract them) into
    `%AppData%/Godot/app_userdata/Atomcraft/Mods`.
    Mods can also be installed in `Atomcraft/Mods/`.
-3. Run `AtomcraftPatcher.exe` (or `AtomcraftPatcher` on Linux) with the game
-   closed.
-   Re-run it after every game update.
-4. In Steam, right click the game in the Library, visit Propertes > General,
-   then enter `-s GodotMonoModLoader.gd` in the Launch Options field.
-5. Launch the game, see the mod loader window, enjoy!
+3. In Steam, right click the game in the Library, visit Propertes > General,
+   then enter `-s GodotMonoModLoader.gd` in the Launch Options field (or
+   `WINEDLLOVERRIDES="dinput8=n,b" %command% -s GodotMonoModLoader.gd` for
+   Linux)
+4. Launch the game, see the mod loader window, enjoy!
 
 # Launch Alternatives
 
@@ -25,6 +24,7 @@ game launch.
 
 | Method              | Edits game files | Needs `-s` | `--headless` | Additional requirements                                 |
 | ------------------- | ---------------- | ---------- | ------------ | ------------------------------------- |
+| `dinput8.dll`       | **no**           | yes        | no           | `WINEDLLOVERRIDES` on Proton          |
 | `AtomcraftPatcher`  | yes              | yes        | **yes**      | **none**                              |
 
 <!-- Each way to start the mod loader documents itself here, as a "## "
@@ -38,6 +38,24 @@ game launch.
        Additional details
 
      The rest of this file is shared, so add nothing outside this section. -->
+
+## dinput8.dll
+
+Stands in for a Windows DLL the game loads at startup, and starts the mod loader
+from there.
+
+Pro:
+- Does not modify any game files
+- Simplest setup
+
+Con:
+- Requires launch options
+  - Windows: `-s GodotMonoModLoader.gd`
+  - Linux/Proton:
+    `WINEDLLOVERRIDES="dinput8=n,b" %command% -s GodotMonoModLoader.gd`
+- No `--headless` mode
+- Most likely to break after an update
+- Least log feedback on mod loader failure
 
 ## AtomcraftPatcher
 
@@ -89,8 +107,8 @@ not provided by your chosen launch alternative. Try [Quick Start](#quick-start)
 again.
 
 **The report says the Mod Loader did not start, and there is no
-`GodotMonoModLoader.startup.log`.** Nothing got the C# half of the mod loader
-into the game. Re-check the requirements in
+`GodotMonoModLoader.startup.log`.** Did you use `dinput8.dll` and `--headless`?
+Use `AtomcraftPatcher` instead. If you already did, re-check the requirements in
 [Launch Alternatives](#launch-alternatives).
 
 **The report says the Mod Loader did not start, and

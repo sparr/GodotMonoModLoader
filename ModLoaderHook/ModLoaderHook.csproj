@@ -6,9 +6,10 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-        <!-- Injected into the game by ModLoaderLauncher, so the name is ours to pick.
+        <!-- Must be named dinput8.dll: it stands in for the system DLL AtomCraft.exe
+             imports, and is found by the loader's application-directory search.
              build.sh supplies the cross-compilation plumbing. -->
-        <AssemblyName>ModLoaderHook</AssemblyName>
+        <AssemblyName>dinput8</AssemblyName>
         <PublishAot>true</PublishAot>
         <NativeLib>Shared</NativeLib>
 

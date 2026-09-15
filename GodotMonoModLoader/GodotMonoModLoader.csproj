@@ -114,6 +114,27 @@
                   PublishDir=$(Dir)"/>
 
         
+        <!-- dinput8.dll is a native AOT win-x64 build. A Windows host does that
+             unaided. Any other host needs the linker overrides in tools/win-aot-host,
+             which stand on a Windows CRT installed by its setup.sh rather than shipped
+             here, so there build.sh has to have run first and this only collects what it
+             produced. Either way the zip is short one file rather than silently wrong. -->
+        <MSBuild Condition="'$(OS)' == 'Windows_NT'"
+                 Projects="..\ModLoaderHook\ModLoaderHook.csproj" BuildInParallel="$(BuildInParallel)" Targets="Clean;Publish"
+                 Properties="Configuration=$(Configuration);
+                  RuntimeIdentifier=win-x64;
+                  PublishDir=$(Dir)"/>
+
+        <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+            <HookPublished Include="$(MSBuildProjectDirectory)/../ModLoaderHook/bin/$(Configuration)/*/win-x64/publish/dinput8.dll" />
+        </ItemGroup>
+
+        <Copy   SourceFiles="@(HookPublished)"
+                DestinationFolder="$(Dir)" />
+
+        <Warning Condition="!Exists('$(Dir)/dinput8.dll')"
+                 Text="dinput8.dll is not in the release zip. Build it first: tools/win-aot-host/build.sh ModLoaderHook/ModLoaderHook.csproj" />
+
         <Copy
                 SourceFiles="$(ReleaseDir)/../$(Name).gd"
                 DestinationFolder="$(Dir)"/>
