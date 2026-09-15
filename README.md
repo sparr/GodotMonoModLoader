@@ -24,6 +24,7 @@ game launch.
 
 | Method              | Edits game files | Needs `-s` | `--headless` | Additional requirements                                 |
 | ------------------- | ---------------- | ---------- | ------------ | ------------------------------------- |
+| `ModLoaderLauncher` | **no**           | **no**     | **yes**      | Steam must not launch `AtomCraft.exe` |
 | `dinput8.dll`       | **no**           | yes        | no           | `WINEDLLOVERRIDES` on Proton          |
 | `AtomcraftPatcher`  | yes              | yes        | **yes**      | **none**                              |
 
@@ -38,6 +39,33 @@ game launch.
        Additional details
 
      The rest of this file is shared, so add nothing outside this section. -->
+
+## ModLoaderLauncher
+
+Starts the game suspended, injects the mod loader into it, and lets it run.
+
+Pro:
+- Does not modify any game files
+- Does not require launch options
+- Supports `--headless` for testing, future multiplayer servers, etc
+- Most likely to continue working with future game versions
+
+Con:
+- Convincing Steam to run it instead of `AtomCraft.exe`
+  - Linux
+    - Option 1
+      - Launch Options:
+        `bash -c 'exec "${@/AtomCraft.exe/ModLoaderLauncher.exe}"' -- %command%`
+    - Option 2
+      - Create `steam_appid.txt` containing `2803490` beside `AtomCraft.exe`
+      - Run `ModLoaderLauncher.exe` via `proton`
+  - Windows
+    - Create `steam_appid.txt` containing `2803490` beside `AtomCraft.exe`, then
+      - Run `ModLoaderLauncher.exe` directly, or
+      - Add `ModLoaderLauncher.exe` as a Non-Steam Game in your Library
+
+Additional command line options: `--no-script` starts the game unmodded through
+the launcher, `--help` lists the rest.
 
 ## dinput8.dll
 
@@ -108,8 +136,8 @@ again.
 
 **The report says the Mod Loader did not start, and there is no
 `GodotMonoModLoader.startup.log`.** Did you use `dinput8.dll` and `--headless`?
-Use `AtomcraftPatcher` instead. If you already did, re-check the requirements in
-[Launch Alternatives](#launch-alternatives).
+Use `ModLoaderLauncher` or `AtomcraftPatcher` instead. If you already did,
+re-check the requirements in [Launch Alternatives](#launch-alternatives).
 
 **The report says the Mod Loader did not start, and
 `GodotMonoModLoader.startup.log` exists.** Something started but did not finish.

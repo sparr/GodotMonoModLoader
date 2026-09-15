@@ -46,8 +46,9 @@ if [ -f "$DATA/Atomcraft.dll.backup" ] && ! cmp -s "$DATA/Atomcraft.dll" "$DATA/
     fi
 fi
 
-say "building the native proxy (dinput8.dll)"
+say "building the native hook (dinput8.dll) and the launcher"
 ./tools/win-aot-host/build.sh ModLoaderHook/ModLoaderHook.csproj >/dev/null
+./tools/win-aot-host/build.sh ModLoaderLauncher/ModLoaderLauncher.csproj >/dev/null
 
 say "building the managed bootstrap"
 dotnet build -c Release ModLoaderBootstrap/ModLoaderBootstrap.csproj >/dev/null
@@ -60,6 +61,7 @@ dotnet build -c Release -p:GameInstallDir="$GAME" \
 
 say "installing into $GAME"
 install -Dm644 ModLoaderHook/bin/Release/net10.0/win-x64/publish/dinput8.dll "$GAME/dinput8.dll"
+install -Dm755 ModLoaderLauncher/bin/Release/net10.0/win-x64/publish/ModLoaderLauncher.exe "$GAME/ModLoaderLauncher.exe"
 install -Dm644 ModLoaderBootstrap/bin/Release/net8.0/ModLoaderBootstrap.dll "$GAME/GodotMonoModLoader/ModLoaderBootstrap.dll"
 install -Dm644 GodotMonoModLoader/bin/Release/net8.0/GodotMonoModLoader.dll "$GAME/GodotMonoModLoader/GodotMonoModLoader.dll"
 install -Dm644 GodotMonoModLoader/bin/Release/net8.0/0Harmony.dll "$GAME/GodotMonoModLoader/0Harmony.dll"
@@ -77,12 +79,22 @@ rm -f "$GAME/GodotMonoModLoader/ModLoaderPatch.dll"
 
 mkdir -p "$GAME/Mods"
 
-say "done. Launch options:"
+say "done. Three ways to start the mod loader are now installed:"
 echo
-echo "    Proton/Linux:  WINEDLLOVERRIDES=\"dinput8=n,b\" %command% -s GodotMonoModLoader.gd"
-echo "    Windows:       -s GodotMonoModLoader.gd"
+echo "  1. ModLoaderLauncher.exe, instead of AtomCraft.exe. Supplies -s itself."
+echo "     Steam on Linux/Proton, launch options:"
 echo
-echo "  The override is required under Proton: Wine prefers its own builtin dinput8"
-echo "  and ignores the file beside the executable without it."
+echo "       bash -c 'exec \"\${@/AtomCraft.exe/ModLoaderLauncher.exe}\"' -- %command%"
 echo
-echo "  Startup diagnostics: $GAME/GodotMonoModLoader.proxy.log"
+echo "  2. dinput8.dll, already beside the game. Launch options:"
+echo
+echo "       Proton:   WINEDLLOVERRIDES=\"dinput8=n,b\" %command% -s GodotMonoModLoader.gd"
+echo "       Windows:  -s GodotMonoModLoader.gd"
+echo
+echo "     Does not work with --headless; use the launcher or the patcher there."
+echo
+echo "  3. AtomcraftPatcher against Atomcraft.dll, then -s GodotMonoModLoader.gd."
+echo "     Must be re-run after every game update."
+echo
+echo "  ModLoader.md beside the game covers all three."
+echo "  Startup diagnostics: $GAME/GodotMonoModLoader.startup.log"

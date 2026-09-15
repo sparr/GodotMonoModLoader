@@ -135,6 +135,24 @@
         <Warning Condition="!Exists('$(Dir)/dinput8.dll')"
                  Text="dinput8.dll is not in the release zip. Build it first: tools/win-aot-host/build.sh ModLoaderHook/ModLoaderHook.csproj" />
 
+        <!-- ModLoaderLauncher.exe is native AOT as well, on the same terms as
+             dinput8.dll above. -->
+        <MSBuild Condition="'$(OS)' == 'Windows_NT'"
+                 Projects="..\ModLoaderLauncher\ModLoaderLauncher.csproj" BuildInParallel="$(BuildInParallel)" Targets="Clean;Publish"
+                 Properties="Configuration=$(Configuration);
+                  RuntimeIdentifier=win-x64;
+                  PublishDir=$(Dir)"/>
+
+        <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+            <LauncherPublished Include="$(MSBuildProjectDirectory)/../ModLoaderLauncher/bin/$(Configuration)/*/win-x64/publish/ModLoaderLauncher.exe" />
+        </ItemGroup>
+
+        <Copy   SourceFiles="@(LauncherPublished)"
+                DestinationFolder="$(Dir)" />
+
+        <Warning Condition="!Exists('$(Dir)/ModLoaderLauncher.exe')"
+                 Text="ModLoaderLauncher.exe is not in the release zip. Build it first: tools/win-aot-host/build.sh ModLoaderLauncher/ModLoaderLauncher.csproj" />
+
         <Copy
                 SourceFiles="$(ReleaseDir)/../$(Name).gd"
                 DestinationFolder="$(Dir)"/>

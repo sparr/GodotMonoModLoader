@@ -23,6 +23,10 @@ var headless_unsupported: Array[String] = []
 
 func _initialize():
 
+	# This build ships a launcher that injects the loader; see ModLoader.md. Registered
+	# before anything else so it is listed even if loading fails immediately.
+	loading_methods.append("Start the game through ModLoaderLauncher.exe instead of AtomCraft.exe")
+
 	# This build ships a dinput8 stand-in that starts the loader; see ModLoader.md.
 	# Registered before anything else so it is listed even if loading fails immediately.
 	loading_methods.append("Put dinput8.dll next to the game executable")
