@@ -1,0 +1,3 @@
+#!/bin/sh
+# Stand-in for MSVC lib.exe, used only when a project sets NativeLib=Static.
+exec lld-link /lib "$@"

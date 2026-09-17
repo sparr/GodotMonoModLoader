@@ -1,0 +1,8 @@
+#!/bin/sh
+# Stand-in for MSVC link.exe.
+#
+# /IGNORE:4099 drops the "cannot use debug info" warning that every object in
+# Microsoft's prebuilt CRT libraries produces, because their PDBs are not
+# shipped in the redistributable SDK. Without it a build emits hundreds of
+# lines of noise that mean nothing.
+exec lld-link /IGNORE:4099 "$@"

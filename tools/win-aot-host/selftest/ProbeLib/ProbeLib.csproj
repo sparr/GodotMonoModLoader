@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Native AOT shared library. build.sh supplies the cross-compilation
+         plumbing; these two properties are what make it a native Windows DLL. -->
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+</Project>
