@@ -8,14 +8,11 @@ var log_history: Array[String] = []
 var start_time
 
 # Ways this build can be told to load mods, reported to the player when none of them
-# ran. Empty here on purpose: this script is shared by every loading mechanism and
-# names none of them.
+# ran. Registered in _initialize below rather than listed here, so that a build
+# shipping more than one way accumulates them all.
 #
-# A branch that adds a mechanism appends one line, phrased as an instruction and in
-# plain text with no BBCode, since these lines are both printed to godot.log and
-# rendered in the report:
-#
-#     loading_methods.append("Start the game through SomeLauncher.exe instead of AtomCraft.exe")
+# Entries are phrased as instructions, and are plain text with no BBCode, since they
+# are both printed to godot.log and rendered in the report.
 var loading_methods: Array[String] = []
 
 # Ways from that list which cannot work without a display, named when the loader fails
@@ -25,6 +22,10 @@ var loading_methods: Array[String] = []
 var headless_unsupported: Array[String] = []
 
 func _initialize():
+
+	# This build can be patched into the game assembly; see ModLoader.md. Registered
+	# before anything else so it is listed even if loading fails immediately.
+	loading_methods.append("Run AtomcraftPatcher against Atomcraft.dll")
 
 	start_time = Time.get_ticks_msec()
 	log_separator()

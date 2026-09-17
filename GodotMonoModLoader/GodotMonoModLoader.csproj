@@ -102,6 +102,17 @@
         <MSBuild Projects="..\ModLoaderBootstrap\ModLoaderBootstrap.csproj" BuildInParallel="$(BuildInParallel)" Targets="Clean;Build">
             <Output TaskParameter="TargetOutputs" ItemName="ModLoaderBootstrapOutput" />
         </MSBuild>
+
+        <MSBuild Projects="..\AtomcraftPatcher\AtomcraftPatcher.csproj" BuildInParallel="$(BuildInParallel)" Targets="Clean;Publish"
+                 Properties="Configuration=$(Configuration);
+                  RuntimeIdentifier=win-x64;
+                  PublishDir=$(Dir)"/>
+
+        <MSBuild Projects="..\AtomcraftPatcher\AtomcraftPatcher.csproj" BuildInParallel="$(BuildInParallel)" Targets="Clean;Publish"
+                 Properties="Configuration=$(Configuration);
+                  RuntimeIdentifier=linux-x64;
+                  PublishDir=$(Dir)"/>
+
         
         <Copy
                 SourceFiles="$(ReleaseDir)/../$(Name).gd"

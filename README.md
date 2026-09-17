@@ -8,10 +8,11 @@ This is a Mod Loader for the game Atomcraft.
 2. Install mod zips (don't extract them) into
    `%AppData%/Godot/app_userdata/Atomcraft/Mods`.
    Mods can also be installed in `Atomcraft/Mods/`.
-3. In Steam, right click the game in the Library, visit Propertes > General,
+3. Run `AtomcraftPatcher.exe` (or `AtomcraftPatcher` on Linux) with the game
+   closed.
+   Re-run it after every game update.
+4. In Steam, right click the game in the Library, visit Propertes > General,
    then enter `-s GodotMonoModLoader.gd` in the Launch Options field.
-4. Arrange for something to start the mod loader inside the game, from
-   [Launch Alternatives](#launch-alternatives) below.
 5. Launch the game, see the mod loader window, enjoy!
 
 # Launch Alternatives
@@ -21,6 +22,10 @@ Everything in this section is optional and meant for unusual use cases.
 Each of these gets the mod loader running inside the game; they differ in what
 they touch and what they need from you. You can choose a different one for each
 game launch.
+
+| Method              | Edits game files | Needs `-s` | `--headless` | Additional requirements                                 |
+| ------------------- | ---------------- | ---------- | ------------ | ------------------------------------- |
+| `AtomcraftPatcher`  | yes              | yes        | **yes**      | **none**                              |
 
 <!-- Each way to start the mod loader documents itself here, as a "## "
      subsection of this one, added by whichever branch introduces it. Keep to
@@ -33,6 +38,44 @@ game launch.
        Additional details
 
      The rest of this file is shared, so add nothing outside this section. -->
+
+## AtomcraftPatcher
+
+Adds a call to the mod loader inside the game's own `Atomcraft.dll`.
+
+Pro:
+- Run just once (per update)
+- Requires no Steam configuration changes
+- Supports `--headless` for testing, future multiplayer servers, etc
+
+Con:
+- Modifies game files (with a backup).
+  Must re-run after a game update or Steam file integrity check
+
+Patching can be scripted. When stdin is not a terminal, the patcher skips its
+"Press ANY key" prompt and reports the outcome through its exit code:
+
+| Option                    | Effect |
+| ------------------------- | ------ |
+| `-y`, `--non-interactive` | Never wait for a keypress, even on a terminal. |
+| `--restore`               | Restore the backup instead of patching. |
+| `--fail-if-patched`       | Exit 6 instead of 0 if already patched. |
+| `--quiet`                 | Suppress progress output, but not errors. |
+| `-h`, `--help`            | Show usage. |
+
+| Exit code | Meaning |
+| :-------: | ------- |
+|     0     | Patch applied, or already patched |
+|     1     | Unclassified failure |
+|     2     | Usage error |
+|     3     | `Atomcraft.dll` or backup not found |
+|     4     | `Atomcraft.dll` is not a build this patcher understands |
+|     5     | Old patch detected, restore required |
+|     6     | Already patched, with `--fail-if-patched` |
+
+A successful patch always exits 0, so
+`AtomcraftPatcher [...] < /dev/null || exit 1` is enough to catch a failure. Use
+`--fail-if-patched` when a no-op needs telling apart from work actually done.
 
 # Troubleshooting
 
